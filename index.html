@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Princess Story Reader</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>プリンセスストーリーリーダー</h1>
+      <p>写真の文字を読み取って、ゆっくり読んでくれるよ。</p>
+    </header>
+
+    <main>
+      <div class="card">
+        <label class="file-button">
+          <span>写真を選択</span>
+          <input id="imageInput" type="file" accept="image/*" capture="environment" />
+        </label>
+
+        <div class="preview" id="previewArea">
+          <span>ここに写真が表示されます</span>
+        </div>
+
+        <div class="controls">
+          <button id="recognizeButton" class="primary">文字を読み取る</button>
+          <button id="speakButton" class="primary">読み上げ</button>
+          <button id="stopButton" class="secondary">停止</button>
+        </div>
+
+        <div class="slider-group">
+          <label for="speedRange">読み上げ速度: <span id="speedLabel">1.0</span></label>
+          <input id="speedRange" type="range" min="0.5" max="2.0" step="0.1" value="1.0" />
+        </div>
+
+        <div class="result">
+          <h2>認識結果</h2>
+          <textarea id="resultText" readonly>ここに文字認識の結果が表示されます。</textarea>
+        </div>
+
+        <div class="hint">
+          <p>3歳のお姫様にもわかりやすくシンプルに使えます。</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

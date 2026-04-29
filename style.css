@@ -1,0 +1,157 @@
+:root {
+  color-scheme: light;
+  font-family: "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, Arial, sans-serif;
+  background: linear-gradient(180deg, #f7c0d4, #f9e0ff);
+  color: #333;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  padding: 20px 0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2.3rem;
+  color: #9f2e67;
+}
+
+header p {
+  margin: 10px auto 0;
+  max-width: 560px;
+  color: #5a314d;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(112, 56, 124, 0.18);
+}
+
+.file-button {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.file-button span {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff8cc6, #ff67a8);
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.file-button input {
+  display: none;
+}
+
+.preview {
+  min-height: 240px;
+  border-radius: 22px;
+  background: #fff0f8;
+  border: 2px dashed #ffc7e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.preview img {
+  max-width: 100%;
+  border-radius: 18px;
+  object-fit: contain;
+}
+
+.controls {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+button {
+  padding: 14px 16px;
+  border: none;
+  border-radius: 16px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #ff5ea8;
+  color: #fff;
+}
+
+button.secondary {
+  background: #fff;
+  color: #ff5ea8;
+  border: 2px solid #ff5ea8;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slider-group {
+  margin-bottom: 20px;
+}
+
+.slider-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #6e2e5a;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.result h2 {
+  margin: 0 0 12px;
+  color: #7f2b6c;
+}
+
+textarea {
+  width: 100%;
+  min-height: 140px;
+  border-radius: 18px;
+  border: 1px solid #f1c6dc;
+  padding: 16px;
+  font-size: 1rem;
+  resize: vertical;
+  background: #fff7fb;
+  color: #43213e;
+}
+
+.hint {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fff2f8;
+  color: #8b3f68;
+}
