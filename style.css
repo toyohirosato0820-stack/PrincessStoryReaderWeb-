@@ -1,8 +1,9 @@
 :root {
   color-scheme: light;
   font-family: "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, Arial, sans-serif;
-  background: linear-gradient(180deg, #f7c0d4, #f9e0ff), url('belle.png') no-repeat center center;
-  background-size: cover;
+  background: url('belle.png') no-repeat right top, linear-gradient(180deg, rgba(247, 192, 212, 0.85), rgba(249, 224, 255, 0.95));
+  background-size: auto 50%, cover;
+  background-attachment: local, fixed;
   color: #333;
 }
 
