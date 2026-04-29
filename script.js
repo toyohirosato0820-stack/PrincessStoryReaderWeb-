@@ -9,12 +9,34 @@ const speedLabel = document.getElementById('speedLabel');
 
 let currentText = '';
 let speechUtterance = null;
+let paddleOCR = null;
+let isOCRReady = false;
 
 speedRange.addEventListener('input', () => {
   speedLabel.textContent = parseFloat(speedRange.value).toFixed(1);
 });
 
-imageInput.addEventListener('change', event => {
+async function initializePaddleOCR() {
+  if (paddleOCR) {
+    return;
+  }
+
+  try {
+    resultText.value = 'PaddleOCRの初期化中です。少しお待ちください...';
+    paddleOCR = await paddleocr.PaddleOCR({
+      ocr_version: 'PP-OCRv4',
+      use_gpu: false,
+      enable_mkldnn: true
+    });
+    isOCRReady = true;
+    resultText.value = '画像を読み込みました。文字を読み取ってください。';
+  } catch (error) {
+    console.error('PaddleOCR initialization error:', error);
+    resultText.value = 'PaddleOCRの初期化に失敗しました。ページを再読み込みしてください。';
+  }
+}
+
+imageInput.addEventListener('change', async event => {
   const file = event.target.files?.[0];
   if (!file) {
     return;
@@ -24,6 +46,10 @@ imageInput.addEventListener('change', event => {
   previewArea.innerHTML = `<img src="${url}" alt="Selected image" />`;
   resultText.value = '画像を読み込みました。文字を読み取ってください。';
   currentText = '';
+
+  if (!isOCRReady) {
+    await initializePaddleOCR();
+  }
 });
 
 recognizeButton.addEventListener('click', async () => {
@@ -33,20 +59,27 @@ recognizeButton.addEventListener('click', async () => {
     return;
   }
 
+  if (!isOCRReady) {
+    await initializePaddleOCR();
+  }
+
   resultText.value = 'OCRを実行中です。少しお待ちください...';
   recognizeButton.disabled = true;
   speakButton.disabled = true;
 
   try {
-    const { data } = await Tesseract.recognize(file, 'jpn', {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          resultText.value = `認識中: ${Math.round(m.progress * 100)}%`;
-        }
-      }
-    });
+    const imageUrl = URL.createObjectURL(file);
+    const result = await paddleOCR.ocr(imageUrl);
 
-    currentText = data.text.trim();
+    if (result && result.length > 0) {
+      currentText = result
+        .map(line => line.map(block => block[0]).join(''))
+        .join('\n')
+        .trim();
+    } else {
+      currentText = '';
+    }
+
     resultText.value = currentText || '文字が見つかりませんでした。別の写真で試してください。';
     speakButton.disabled = currentText.length === 0;
   } catch (error) {
@@ -80,4 +113,8 @@ stopButton.addEventListener('click', () => {
   if (window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializePaddleOCR();
 });
