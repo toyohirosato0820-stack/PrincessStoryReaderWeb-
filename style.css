@@ -1,7 +1,8 @@
 :root {
   color-scheme: light;
   font-family: "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, Arial, sans-serif;
-  background: linear-gradient(180deg, #f7c0d4, #f9e0ff);
+  background: linear-gradient(180deg, #f7c0d4, #f9e0ff), url('belle.png') no-repeat center center;
+  background-size: cover;
   color: #333;
 }
 
@@ -27,14 +28,15 @@ header {
 
 header h1 {
   margin: 0;
-  font-size: 2.3rem;
+  font-size: 1.8rem;
   color: #9f2e67;
 }
 
 header p {
-  margin: 10px auto 0;
+  margin: 5px auto 0;
   max-width: 560px;
   color: #5a314d;
+  font-size: 0.9rem;
 }
 
 .engine-label {
