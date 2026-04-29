@@ -3,37 +3,48 @@ const previewArea = document.getElementById('previewArea');
 const recognizeButton = document.getElementById('recognizeButton');
 const speakButton = document.getElementById('speakButton');
 const stopButton = document.getElementById('stopButton');
+const copyButton = document.getElementById('copyButton');
 const resultText = document.getElementById('resultText');
 const speedRange = document.getElementById('speedRange');
 const speedLabel = document.getElementById('speedLabel');
 
 let currentText = '';
 let speechUtterance = null;
-let paddleOCR = null;
+let ocrWorker = null;
 let isOCRReady = false;
 
 speedRange.addEventListener('input', () => {
   speedLabel.textContent = parseFloat(speedRange.value).toFixed(1);
 });
 
-async function initializePaddleOCR() {
-  if (paddleOCR) {
+async function initializeWorker() {
+  if (ocrWorker) {
     return;
   }
 
-  try {
-    resultText.value = 'PaddleOCRの初期化中です。少しお待ちください...';
-    paddleOCR = await paddleocr.PaddleOCR({
-      ocr_version: 'PP-OCRv4',
-      use_gpu: false,
-      enable_mkldnn: true
-    });
-    isOCRReady = true;
-    resultText.value = '画像を読み込みました。文字を読み取ってください。';
-  } catch (error) {
-    console.error('PaddleOCR initialization error:', error);
-    resultText.value = 'PaddleOCRの初期化に失敗しました。ページを再読み込みしてください。';
-  }
+  resultText.value = 'OCRエンジンを準備中です...';
+  ocrWorker = Tesseract.createWorker({
+    logger: m => {
+      if (m.status === 'recognizing text') {
+        resultText.value = `認識中: ${Math.round(m.progress * 100)}%`;
+      } else if (m.status === 'loading language model') {
+        resultText.value = '日本語モデルを読み込んでいます...';
+      } else if (m.status === 'initializing tesseract') {
+        resultText.value = 'OCRの初期化中です...';
+      }
+    },
+    langPath: 'https://tessdata.projectnaptha.com/4.0.0'
+  });
+
+  await ocrWorker.load();
+  await ocrWorker.loadLanguage('jpn');
+  await ocrWorker.initialize('jpn');
+  await ocrWorker.setParameters({
+    tessedit_pageseg_mode: '6',
+    tessedit_ocr_engine_mode: '1'
+  });
+  isOCRReady = true;
+  resultText.value = '画像を読み込みました。文字を読み取ってください。';
 }
 
 imageInput.addEventListener('change', async event => {
@@ -48,7 +59,7 @@ imageInput.addEventListener('change', async event => {
   currentText = '';
 
   if (!isOCRReady) {
-    await initializePaddleOCR();
+    await initializeWorker();
   }
 });
 
@@ -60,28 +71,21 @@ recognizeButton.addEventListener('click', async () => {
   }
 
   if (!isOCRReady) {
-    await initializePaddleOCR();
+    await initializeWorker();
   }
 
   resultText.value = 'OCRを実行中です。少しお待ちください...';
   recognizeButton.disabled = true;
   speakButton.disabled = true;
+  copyButton.disabled = true;
 
   try {
-    const imageUrl = URL.createObjectURL(file);
-    const result = await paddleOCR.ocr(imageUrl);
-
-    if (result && result.length > 0) {
-      currentText = result
-        .map(line => line.map(block => block[0]).join(''))
-        .join('\n')
-        .trim();
-    } else {
-      currentText = '';
-    }
-
+    const processedImage = await preprocessImage(file);
+    const { data } = await ocrWorker.recognize(processedImage);
+    currentText = data.text.trim();
     resultText.value = currentText || '文字が見つかりませんでした。別の写真で試してください。';
     speakButton.disabled = currentText.length === 0;
+    copyButton.disabled = currentText.length === 0;
   } catch (error) {
     console.error(error);
     resultText.value = 'OCRに失敗しました。別の写真で試してください。';
@@ -90,8 +94,25 @@ recognizeButton.addEventListener('click', async () => {
   }
 });
 
+copyButton.addEventListener('click', async () => {
+  const textToCopy = resultText.value.trim();
+  if (!textToCopy) {
+    alert('コピーするテキストがありません。');
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(textToCopy);
+    alert('OCR結果をクリップボードにコピーしました。ChatGPTアプリに貼り付けて修正してください。');
+  } catch (error) {
+    console.error('Clipboard error:', error);
+    alert('コピーに失敗しました。手動でテキストを選択してください。');
+  }
+});
+
 speakButton.addEventListener('click', () => {
-  if (!currentText) {
+  const editedText = resultText.value.trim();
+  if (!editedText) {
     alert('まず文字を認識してください。');
     return;
   }
@@ -102,7 +123,7 @@ speakButton.addEventListener('click', () => {
   }
 
   speechSynthesis.cancel();
-  speechUtterance = new SpeechSynthesisUtterance(currentText);
+  speechUtterance = new SpeechSynthesisUtterance(editedText);
   speechUtterance.lang = 'ja-JP';
   speechUtterance.rate = parseFloat(speedRange.value);
   speechUtterance.pitch = 1.0;
@@ -115,6 +136,36 @@ stopButton.addEventListener('click', () => {
   }
 });
 
+async function preprocessImage(file) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const maxSize = 1200;
+      const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+        const adjusted = gray > 200 ? 255 : gray < 80 ? 0 : gray;
+        data[i] = data[i + 1] = data[i + 2] = adjusted;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    image.onerror = reject;
+    image.src = URL.createObjectURL(file);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  initializePaddleOCR();
+  initializeWorker();
 });

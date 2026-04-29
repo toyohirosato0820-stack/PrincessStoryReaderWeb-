@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Princess Story Reader</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/paddleocr@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>プリンセスストーリーリーダー</h1>
       <p>写真の文字を読み取って、ゆっくり読んでくれるよ。</p>
+      <p class="engine-label">現在のOCRエンジン: Tesseract.js</p>
     </header>
 
     <main>
@@ -38,11 +39,15 @@
 
         <div class="result">
           <h2>認識結果</h2>
-          <textarea id="resultText" readonly>ここに文字認識の結果が表示されます。</textarea>
+          <textarea id="resultText">ここに文字認識の結果が表示されます。</textarea>
+        </div>
+
+        <div class="controls extra-controls">
+          <button id="copyButton" class="secondary">ChatGPTにコピー</button>
         </div>
 
         <div class="hint">
-          <p>3歳のお姫様にもわかりやすくシンプルに使えます。</p>
+          <p>必要に応じてテキストを編集してから読み上げてください。誤認識がある場合は、ChatGPTアプリに貼り付けて修正できます。</p>
         </div>
       </div>
     </main>

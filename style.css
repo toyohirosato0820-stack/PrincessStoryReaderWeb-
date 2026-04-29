@@ -37,6 +37,12 @@ header p {
   color: #5a314d;
 }
 
+.engine-label {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: #7f4d7e;
+}
+
 .card {
   background: rgba(255, 255, 255, 0.92);
   border-radius: 28px;
@@ -90,6 +96,10 @@ header p {
   gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 16px;
+}
+
+.controls.extra-controls {
+  margin-bottom: 20px;
 }
 
 button {
