@@ -18,33 +18,23 @@ speedRange.addEventListener('input', () => {
 });
 
 async function initializeWorker() {
-  if (ocrWorker) {
+  if (isOCRReady) {
     return;
   }
 
   resultText.value = 'OCRエンジンを準備中です...';
-  ocrWorker = Tesseract.createWorker({
-    logger: m => {
-      if (m.status === 'recognizing text') {
-        resultText.value = `認識中: ${Math.round(m.progress * 100)}%`;
-      } else if (m.status === 'loading language model') {
-        resultText.value = '日本語モデルを読み込んでいます...';
-      } else if (m.status === 'initializing tesseract') {
-        resultText.value = 'OCRの初期化中です...';
-      }
-    },
-    langPath: 'https://tessdata.projectnaptha.com/4.0.0'
-  });
-
-  await ocrWorker.load();
-  await ocrWorker.loadLanguage('jpn');
-  await ocrWorker.initialize('jpn');
-  await ocrWorker.setParameters({
-    tessedit_pageseg_mode: '6',
-    tessedit_ocr_engine_mode: '1'
-  });
-  isOCRReady = true;
-  resultText.value = '画像を読み込みました。文字を読み取ってください。';
+  
+  try {
+    resultText.value = '日本語モデルを読み込んでいます...';
+    ocrWorker = await Tesseract.createWorker('jpn');
+    await ocrWorker.loadLanguage('jpn');
+    await ocrWorker.initialize('jpn');
+    isOCRReady = true;
+    resultText.value = '画像を読み込みました。文字を読み取ってください。';
+  } catch (error) {
+    console.error('Tesseract initialization:', error);
+    resultText.value = '初期化に失敗しました。ページをリロードしてください。';
+  }
 }
 
 imageInput.addEventListener('change', async event => {
@@ -70,19 +60,22 @@ recognizeButton.addEventListener('click', async () => {
     return;
   }
 
-  if (!isOCRReady) {
-    await initializeWorker();
-  }
-
   resultText.value = 'OCRを実行中です。少しお待ちください...';
   recognizeButton.disabled = true;
   speakButton.disabled = true;
   copyButton.disabled = true;
 
   try {
-    const processedImage = await preprocessImage(file);
-    const { data } = await ocrWorker.recognize(processedImage);
-    currentText = data.text.trim();
+    const imageUrl = URL.createObjectURL(file);
+    const { data: { text } } = await ocrWorker.recognize(imageUrl, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          resultText.value = `認識中: ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    });
+
+    currentText = text.trim();
     resultText.value = currentText || '文字が見つかりませんでした。別の写真で試してください。';
     speakButton.disabled = currentText.length === 0;
     copyButton.disabled = currentText.length === 0;
